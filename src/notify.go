@@ -51,6 +51,14 @@ func go_index(w http.ResponseWriter, r *http.Request) {
         }
         return
     }
+    if(r.URL.Path=="/failover"){
+        fmt.Fprintf(w,"容灾列表\n")
+        ans:=failover.Get_Adress_List()
+ 
+        fmt.Fprintf(w,ans)
+       
+        return
+    }
     fmt.Fprintf(w, "这是基于http的类notify中间件") //这个写入到w的是输出到客户端的
 }
 
@@ -86,7 +94,12 @@ func go_failover(w http.ResponseWriter, r *http.Request) {
 func go_queue(w http.ResponseWriter, r *http.Request) {
 //    fmt.Println(strings.Split(r.URL.Path,"/"))   
   //  rt := time.Now().UnixNano()
-//    fmt.Println(r.URL.Path)
+
+    //定向到go_failover函数去
+    if r.URL.Path=="/queue/" {
+        go_failover(w,r)
+        return
+    }
     r.ParseForm()
     var sum int=configure.MESSAGE_MAX_LENTGH
     for _,v:=range(r.Form["mesg"]){
@@ -135,6 +148,7 @@ func main() {
     runtime.GOMAXPROCS(runtime.NumCPU()*2)
     http.HandleFunc("/", go_index) //设置访问的路由
      http.HandleFunc("/queue/failover/in", go_failover) //设置访问的路由
+     http.HandleFunc("/queue",go_failover)
     http.HandleFunc("/queue/",go_queue)
     fmt.Printf("the port is: "+configure.PORT+"\n")
     err := http.ListenAndServe(":"+configure.PORT, nil) //设置监听的端口

@@ -15,7 +15,7 @@ import (
 //容灾队列指针
 var client *zqueue.Client
 
-func Get_failover_list() []string{
+func Get_Session_List() []string{
     var ans []string
     for _,v:=range(zqueue.List()){
   //      fmt.Println(v.Show_what([]string{"qid","delay","token"})+"|"+v.Show_oip())
@@ -26,11 +26,16 @@ func Get_failover_list() []string{
 
 func Auto_Sync(){
     for{
-        mesg:=Get_failover_list()
+        mesg:=Get_Session_List()
  //       fmt.Println(mesg,"\n--------------------")
         client.Push_Message_In(mesg)
         time.Sleep(3*time.Second)
     }
+}
+
+func Get_Adress_List()string{
+    tmp_str:=client.Show_oip()
+    return tmp_str
 }
 
 func Sync_Session_Request(token []string,mesg []string)([]string,int){
@@ -42,7 +47,7 @@ func Sync_Session_Request(token []string,mesg []string)([]string,int){
             fmt.Println("session error")
         }
     }  
-    return Get_failover_list(),0
+    return Get_Session_List(),0
 }
 
 func init(){

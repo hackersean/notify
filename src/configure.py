@@ -25,7 +25,7 @@ def get_queue_stat(myurl,token,mesg):
     ans=go_curl(myurl,mesg,token)
     return ans
 
-token=""
+token="3435234"
 myport="9090"
 while True:
     
