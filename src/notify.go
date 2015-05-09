@@ -9,9 +9,8 @@ import (
     "log"
     "zqueue"
     "failover"
-    "zqueue/configure"
+    "configure"
 )
-
 
 //-----------------------------------------------------
 //URL判断，只是简单的URL判断
@@ -54,9 +53,9 @@ func go_index(w http.ResponseWriter, r *http.Request) {
     if(r.URL.Path=="/failover"){
         fmt.Fprintf(w,"容灾列表\n")
         ans:=failover.Get_Adress_List()
- 
-        fmt.Fprintf(w,ans)
-       
+        for _,v:=range(ans){
+            fmt.Fprintf(w,v+"\n")
+        }            
         return
     }
     fmt.Fprintf(w, "这是基于http的类notify中间件") //这个写入到w的是输出到客户端的
@@ -106,34 +105,34 @@ func go_queue(w http.ResponseWriter, r *http.Request) {
         sum-=len(v)
     }
     if sum<0{
-        fmt.Fprintf(w,"消息过长")
+        fmt.Fprintf(w,"1\n消息过长")
         return
     }
     qid,stat:=go_simple_check(r.URL.Path)
     if(stat==-1){
-         fmt.Fprintf(w,"url is fail")
+         fmt.Fprintf(w,"2\nurl is fail")
     }else if(stat==1){
           //调用函数，发送消息
           ok:=zqueue.Push_Message(qid,r.Form["token"],r.Form["mesg"])             
           if ok==0 {
-              fmt.Fprintf(w,"%s ok",qid)
+              fmt.Fprintf(w,"0\nSuccess")
           }else if ok==1{
-              fmt.Fprintf(w,"%s token fail",qid)
+              fmt.Fprintf(w,"3\n鉴权失败")
           }else if ok==2 {
-              fmt.Fprintf(w,"队列满")
+              fmt.Fprintf(w,"4\n队列满")
           }else if ok==3 {
-              fmt.Fprintf(w,"%s 不存在",qid)
+              fmt.Fprintf(w,"5\n队列不存在")
           }else if ok==4{
-              fmt.Fprintf(w,"%s 为保留队列",qid)
+              fmt.Fprintf(w,"6\n队列保留")
           }
     }else if(stat==2){
          stat_str,ok:=zqueue.Get_Status(qid,r.Form["token"])
          if ok==0 {     
-             fmt.Fprintf(w,"%s",stat_str)
+             fmt.Fprintf(w,"0\n%s",stat_str)
          }else if ok==1{
-             fmt.Fprintf(w,"%s 不存在",qid)
+             fmt.Fprintf(w,"5\n队列不存在")
          }else if ok==2{
-             fmt.Fprintf(w,"%s 鉴权失败",qid)
+             fmt.Fprintf(w,"3\n鉴权失败")
          }
          
     }
@@ -144,13 +143,15 @@ func go_queue(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func main() {
+func main(){
     runtime.GOMAXPROCS(runtime.NumCPU()*2)
     http.HandleFunc("/", go_index) //设置访问的路由
-     http.HandleFunc("/queue/failover/in", go_failover) //设置访问的路由
-     http.HandleFunc("/queue",go_failover)
+    http.HandleFunc("/queue/failover/in", go_failover) //设置访问的路由
+    http.HandleFunc("/queue",go_failover)
     http.HandleFunc("/queue/",go_queue)
-    fmt.Printf("the port is: "+configure.PORT+"\n")
+    fmt.Printf("----------------系统启动完毕------------------\n")
+    fmt.Printf("端口号为: "+configure.PORT+"\n")
+    fmt.Printf("Server ID为: "+configure.SERVER_ID+"\n")
     err := http.ListenAndServe(":"+configure.PORT, nil) //设置监听的端口
     if err != nil {
         log.Fatal("ListenAndServe: ", err)

@@ -1,11 +1,12 @@
 package zhttp
 import (
-    "fmt"
+    //"fmt"
     "net"
     "time"
     "net/http"
     "net/url"
-    "zqueue/configure"
+    "configure"
+    "log"
 //    "io/ioutil"
     
 )
@@ -39,7 +40,7 @@ func HttpPostForm(http http.Client,push_url string,mesg []string,token string) b
     
     if err != nil {
         // handle error  
-        fmt.Println("fail",err) 
+        log.Println("Push Error",push_url)
         return false
     }
     
@@ -47,8 +48,7 @@ func HttpPostForm(http http.Client,push_url string,mesg []string,token string) b
     defer resp.Body.Close()
   //  body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
-  // handle error
-	return false
+	    return false
     }
  
 //    fmt.Println(string(body))

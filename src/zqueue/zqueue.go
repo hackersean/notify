@@ -8,7 +8,7 @@ import (
     "strings"
     "strconv"
     "sync/atomic"
-    "zqueue/configure"
+    "configure"
     "zqueue/zhttp"
 )
 //-------------------------------------------------
@@ -22,7 +22,7 @@ type Client struct{
     dip  chan string      //目的端ip队列
     mpt  map[string]int  //目的端ip散列
     ch    *Queue
-    sync.Mutex           //互斥锁
+    sync.RWMutex           //互斥锁
 }
 //队列结构体
 type Queue struct{
@@ -116,12 +116,21 @@ func (this *Client) Reset(ip string,fmax int) bool {
     this.mpt[ip]=fmax
     return true
 }
+func (this *Client) Get_opi_list() []string{
+    var ans []string
+    this.RLock()
+    defer this.RUnlock() 
+    for k,v:=range(this.mpt){
+        ans=append(ans,k+","+strconv.Itoa(v))
+    }
+    return ans
+}
 
 //输出队列状态     目标IP列表
 func (this *Client) Show_oip() string{
     var ans string
-    this.Lock()
-    defer this.Unlock()
+    this.RLock()
+    defer this.RUnlock()
     for k,v:=range(this.mpt){
         ans=ans+"["+k+","+strconv.Itoa(v)+"];"
     }
@@ -131,8 +140,8 @@ func (this *Client) Show_oip() string{
 //输出查询的项
 func (this *Client) Show_what(keys []string) string{
     //var ans string
-    this.Lock()
-    defer this.Unlock()
+    this.RLock()
+    defer this.RUnlock()
     var tmp string
     var ans string
     for _,k:=range(keys){
@@ -165,8 +174,8 @@ func (this *Client) Show_what(keys []string) string{
 //公开信息
 func (this *Client) Show_free() string{
     var ans string
-    this.Lock()
-    defer this.Unlock()
+    this.RLock()
+    defer this.RUnlock()
     ans=this.qid+"|"+strconv.Itoa(int(this.ch.deep))
     return ans
 }
@@ -203,7 +212,7 @@ func (this *Client) Push_Message_Out(){
                    this.dip <- item
                    break
                }else{
-               //===============加锁，保护mpt====================
+               //===============加锁，保护mpt，写锁====================
                    this.Lock()
                    this.mpt[item]-=1
                    if(this.mpt[item]<=0){
@@ -228,23 +237,26 @@ func (this *Client) Push_Message_Out(){
 //--------------------session散列----------------------
 
 var queue_session map[string]*Client
-var global sync.Mutex
+var global sync.RWMutex
 //判断qid是否存在
 
 
 //-------------------session 维护，内部接口-------------------------
+//列出所有session的指针
 func List() []*Client{
-    global.Lock()                         //全局锁保护
-    defer global.Unlock()
+    global.RLock()                         //全局锁保护
+    defer global.RUnlock()
     var ans []*Client
     for _,v:=range(queue_session){
         ans=append(ans,v)
     }
     return ans
 }
+
+//校验
 func Check(qid string) bool{
-    global.Lock()                         //全局锁保护
-    defer global.Unlock()
+    global.RLock()                         //全局锁保护
+    defer global.RUnlock()
     if _,ok:=queue_session[qid];ok{        
         return true
     }else{
@@ -254,8 +266,8 @@ func Check(qid string) bool{
 
 //获取session
 func Find(qid string) *Client{
-    global.Lock()                   //全局锁保护
-    defer global.Unlock()
+    global.RLock()                   //全局锁保护
+    defer global.RUnlock()
     if v,ok:=queue_session[qid];ok{
         return v
     }else{
@@ -281,7 +293,7 @@ func Delete_Session(qid string,token []string) int{
     return 1
 }
 
-//添加队列
+//添加队列--------------写锁---------------
 func Add(session_str string,force bool) int{
    var qid,token,str_delay,oip string
     //----------解析-------------
@@ -298,7 +310,7 @@ func Add(session_str string,force bool) int{
     //把秒转换为纳秒
     var client *Client
     global.Lock()               //全局锁保护
-    defer global.Unlock()
+    
     client,ok:=queue_session[qid]      //判断session是否存在
 //    fmt.Println("sesson",ok)
     if ok==false{
@@ -318,7 +330,7 @@ func Add(session_str string,force bool) int{
         //把指针保存到map中
         queue_session[qid]=client
     }
-
+    global.Unlock()
     //读入ip列表
     for _,item:=range(strings.Split(oip,";")){   
        if len(item)<=3 {continue}
@@ -342,7 +354,7 @@ func Add(session_str string,force bool) int{
     return 0
 }
 
-//删除session结构体
+//删除session结构体--------------写锁--------------------
 func Del(qid string) bool{
     global.Lock()               //全局锁保护
     delete(queue_session, qid)  //删除
@@ -376,8 +388,8 @@ func Push_Message(qid string,token []string,mesg []string) int{
 }
 //获取队列列表
 func Get_Queue_List()[]string{
-    global.Lock()
-    defer global.Unlock()
+    global.RLock()
+    defer global.RUnlock()
     var ans []string
     for _,v:=range(queue_session){
         ans=append(ans,v.Show_free())
@@ -432,7 +444,7 @@ func init_session(){
 func init(){
      queue_session=make(map[string]*Client)
      init_session()
-     fmt.Println("队列系统载入完毕")
+     fmt.Println("队列模块载入完毕")
 }
 
 func main() {

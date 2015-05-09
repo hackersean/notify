@@ -8,6 +8,7 @@ import (
 //      "strconv"
       "zqueue"
       "time"
+      "log"
  //   "zqueue/configure"
   //  "zqueue/zhttp"
       
@@ -33,9 +34,9 @@ func Auto_Sync(){
     }
 }
 
-func Get_Adress_List()string{
-    tmp_str:=client.Show_oip()
-    return tmp_str
+func Get_Adress_List()[]string{
+    tmp_list:=client.Get_opi_list()
+    return tmp_list
 }
 
 func Sync_Session_Request(token []string,mesg []string)([]string,int){
@@ -47,11 +48,12 @@ func Sync_Session_Request(token []string,mesg []string)([]string,int){
             fmt.Println("session error")
         }
     }  
+    log.Printf("Session同步完毕\n")
     return Get_Session_List(),0
 }
 
 func init(){
-    client=zqueue.Find("failover") 
+    client=zqueue.Find("failover")
     go Auto_Sync()
     fmt.Println("容灾模块载入完毕")
 //     ans:=Get_failover_list()
