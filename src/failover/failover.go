@@ -8,6 +8,7 @@ import (
 //      "strconv"
       "zqueue"
       "time"
+      "configure"
       "log"
  //   "zqueue/configure"
   //  "zqueue/zhttp"
@@ -54,7 +55,9 @@ func Sync_Session_Request(token []string,mesg []string)([]string,int){
 
 func init(){
     client=zqueue.Find("failover")
-    go Auto_Sync()
+    if configure.IS_SLAVE==0{
+        go Auto_Sync()
+    }
     fmt.Println("容灾模块载入完毕")
 //     ans:=Get_failover_list()
 //     fmt.Println(ans)

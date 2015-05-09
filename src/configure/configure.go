@@ -12,6 +12,7 @@ var LOG_PATH string="log/notify.log"
 var SERVER_ID string=""
 var WRITE_MAX_LATE int=1
 var CLIENT_MAX_FAIL int=3
+var IS_SLAVE int=1
 var MESSAGE_MAX_LENTGH int=256
 var MAX_DEEP int=100000
 var QUEUE_MAX_CLIENT int=100
@@ -61,6 +62,8 @@ func do_read_configure(){
                     break
                 case "FAILOVER_PATH" :
                     FAILOVER_PATH=tmp_lis[1]
+                case "IS_SLAVE":
+                    IS_SLAVE,_=strconv.Atoi(tmp_lis[1])
                 case "PORT" :
                     PORT=tmp_lis[1]
                     break

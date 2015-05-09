@@ -151,7 +151,14 @@ func main(){
     http.HandleFunc("/queue/",go_queue)
     fmt.Printf("----------------系统启动完毕------------------\n")
     fmt.Printf("端口号为: "+configure.PORT+"\n")
+    if configure.IS_SLAVE==1 {
+        fmt.Printf("服务状态为: SLAVE\n")
+    }else{
+        fmt.Printf("服务状态为: MASTER\n")
+    }
     fmt.Printf("Server ID为: "+configure.SERVER_ID+"\n")
+
+    //---------------------------------------------------------------
     err := http.ListenAndServe(":"+configure.PORT, nil) //设置监听的端口
     if err != nil {
         log.Fatal("ListenAndServe: ", err)

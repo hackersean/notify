@@ -59,3 +59,9 @@
 2015/05/08 10:16:51 zhttp.go:43: Push Error http://192.0.0.1:9090/queue/
 2015/05/08 10:16:54 zhttp.go:43: Push Error http://192.0.0.1:9091/queue/
 2015/05/08 10:16:57 zhttp.go:43: Push Error http://192.0.0.1:9090/queue/
+2015/05/09 16:02:47 configure.go:86: Computer StandingBy
+2015/05/09 16:05:17 configure.go:86: Computer StandingBy
+2015/05/09 16:06:14 configure.go:86: Computer StandingBy
+2015/05/09 16:06:57 configure.go:86: Computer StandingBy
+2015/05/09 16:07:18 configure.go:86: Computer StandingBy
+2015/05/09 16:07:49 configure.go:86: Computer StandingBy
